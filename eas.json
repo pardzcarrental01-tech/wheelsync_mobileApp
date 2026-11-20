@@ -9,7 +9,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://wheelsync-fastapi.vercel.app"
+        "EXPO_PUBLIC_API_URL": "https://wheelsyncfastapi.vercel.app"
       }
     },
     "production": {
@@ -17,7 +17,7 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://wheelsync-fastapi.vercel.app"
+        "EXPO_PUBLIC_API_URL": "https://wheelsyncfastapi.vercel.app"
       }
     }
   }

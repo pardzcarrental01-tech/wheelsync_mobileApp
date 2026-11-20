@@ -81,3 +81,11 @@ export const ZONES = [
 ]
 
 export const zoneById = Object.fromEntries(ZONES.map((z) => [z.id, z]))
+
+// Numbers for the damaged parts, in the order they were first marked: 1, 2, 3...
+// Parts that only have PRE marks (on the POST tab) get the next numbers after the new ones.
+export function zoneNumbers(marks, ghostMarks = []) {
+  const order = []
+  ;[...marks, ...ghostMarks].forEach((m) => { if (!order.includes(m.zone)) order.push(m.zone) })
+  return Object.fromEntries(order.map((zone, index) => [zone, index + 1]))
+}

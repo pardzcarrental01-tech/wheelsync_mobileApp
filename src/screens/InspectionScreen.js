@@ -10,7 +10,7 @@ import { useAppTheme } from '../context/ThemeContext'
 import VehicleDiagram from '../components/VehicleDiagram'
 import { AppShell, Button, Card as SurfaceCard, Fill, TopBar, inputStyle } from '../components/ui'
 import {
-  TOOLS, TOOL_STATUSES, DAMAGE_CODES, FUEL_LEVELS, damageById, zoneById,
+  TOOLS, TOOL_STATUSES, DAMAGE_CODES, FUEL_LEVELS, damageById, zoneById, zoneNumbers,
 } from '../lib/inspectionData'
 
 const TABS = [
@@ -152,7 +152,7 @@ function SignatureBox({ title, name, onName, signed, onToggle }) {
 
 // Bottom sheet that opens when a car part is tapped.
 // Tap a code to add it to that part, tap it again to remove it.
-function DamageSheet({ zoneId, marks, onToggle, onClearZone, onClose }) {
+function DamageSheet({ zoneId, zoneNumber, marks, onToggle, onClearZone, onClose }) {
   const { colors } = useAppTheme()
   const zone = zoneId ? zoneById[zoneId] : null
   const zoneMarks = marks.filter((m) => m.zone === zoneId)
@@ -166,12 +166,29 @@ function DamageSheet({ zoneId, marks, onToggle, onClearZone, onClose }) {
         >
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: '700' }}>{zone?.label}</Text>
+              <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: '700' }}>{zoneNumber ? `${zoneNumber}. ` : ''}{zone?.label}</Text>
               <Text style={{ color: colors.textMuted, fontSize: 13 }}>Tap the damage you see. Tap again to remove it.</Text>
             </View>
             <Pressable onPress={onClose} style={{ padding: 6 }}>
               <Ionicons name="close" size={24} color={colors.textPrimary} />
             </Pressable>
+          </View>
+
+          <View style={{ gap: 6 }}>
+            <Text style={{ color: colors.textMuted, fontSize: 12, fontWeight: '700' }}>DAMAGE ON THIS PART</Text>
+            {zoneMarks.length === 0 ? (
+              <Text style={{ color: colors.textMuted, fontSize: 13 }}>No damage marked.</Text>
+            ) : (
+              zoneMarks.map((m) => (
+                <View key={m.code} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: 12, backgroundColor: `${colors.danger}1A` }}>
+                  <Text style={{ color: colors.danger, fontWeight: '800', width: 36 }}>{damageById[m.code]?.code ?? m.code}</Text>
+                  <Text style={{ color: colors.textPrimary, flex: 1 }}>{damageById[m.code]?.label ?? m.code}</Text>
+                  <Pressable onPress={() => onToggle(zoneId, m.code)} hitSlop={8}>
+                    <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                  </Pressable>
+                </View>
+              ))
+            )}
           </View>
 
           <ScrollView contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 8 }}>
@@ -509,6 +526,7 @@ export default function InspectionScreen({ route, navigation }) {
 
       <DamageSheet
         zoneId={activeZone}
+        zoneNumber={activeZone ? zoneNumbers(form.marks, tab === 'post_rental' ? forms.pre_rental.marks : [])[activeZone] : null}
         marks={form.marks}
         onToggle={toggleMark}
         onClearZone={clearZone}

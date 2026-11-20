@@ -1,7 +1,7 @@
 import { View } from 'react-native'
 import Svg, { Rect, Polygon, Path, G, Circle, Text as SvgText } from 'react-native-svg'
 import { useAppTheme } from '../context/ThemeContext'
-import { ZONES, damageById } from '../lib/inspectionData'
+import { ZONES, zoneById, zoneNumbers } from '../lib/inspectionData'
 
 // The shape of one tappable car part.
 function ZoneShape({ zone, ...props }) {
@@ -28,6 +28,7 @@ export default function VehicleDiagram({ marks, ghostMarks = [], onZonePress }) 
       .map((g) => ({ ...g, ghost: true })),
   ]
 
+  const numbers = zoneNumbers(marks, ghostMarks)
   const byZone = {}
   items.forEach((item) => {
     if (!byZone[item.zone]) byZone[item.zone] = []
@@ -123,36 +124,26 @@ export default function VehicleDiagram({ marks, ghostMarks = [], onZonePress }) 
         <SvgText x={10} y={236} fontSize="11" fill={colors.textMuted} textAnchor="middle" pointerEvents="none">L</SvgText>
         <SvgText x={290} y={236} fontSize="11" fill={colors.textMuted} textAnchor="middle" pointerEvents="none">R</SvgText>
 
-        {/* Damage markers */}
-        {ZONES.map((zone) => {
-          const list = byZone[zone.id]
-          if (!list) return null
-          const n = list.length
-          return list.map((item, i) => {
-            const offset = (i - (n - 1) / 2) * 24
-            const x = zone.stack === 'v' ? zone.cx : zone.cx + offset
-            const y = zone.stack === 'v' ? zone.cy + offset : zone.cy
-            const code = damageById[item.code]?.code ?? item.code
-            return (
-              <G key={`${zone.id}-${item.code}-${item.ghost ? 'g' : 'm'}`} onPress={() => onZonePress(zone.id)}>
-                {item.ghost ? (
-                  <Circle cx={x} cy={y} r={11} fill={colors.bgSurface} stroke={colors.warning} strokeWidth={1.5} strokeDasharray="3 3" />
-                ) : (
-                  <Circle cx={x} cy={y} r={11} fill={colors.danger} />
-                )}
-                <SvgText
-                  x={x}
-                  y={y + 3.5}
-                  fontSize="9.5"
-                  fontWeight="bold"
-                  fill={item.ghost ? colors.warning : 'white'}
-                  textAnchor="middle"
-                >
-                  {code}
-                </SvgText>
-              </G>
-            )
-          })
+        {/* Numbered markers: one per damaged part. Tap the number to see and edit that part's damage. */}
+        {Object.entries(numbers).map(([zoneId, n]) => {
+          const zone = zoneById[zoneId]
+          const ghost = !byZone[zoneId]?.some((i) => !i.ghost)
+          return (
+            <G key={`num-${zoneId}`} onPress={() => onZonePress(zoneId)}>
+              <Circle
+                cx={zone.cx}
+                cy={zone.cy}
+                r={12}
+                fill={ghost ? colors.bgSurface : colors.danger}
+                stroke={ghost ? colors.warning : 'none'}
+                strokeWidth={1.5}
+                strokeDasharray={ghost ? '3 3' : undefined}
+              />
+              <SvgText x={zone.cx} y={zone.cy + 4} fontSize="11" fontWeight="bold" fill={ghost ? colors.warning : 'white'} textAnchor="middle">
+                {n}
+              </SvgText>
+            </G>
+          )
         })}
       </Svg>
     </View>
